@@ -14,7 +14,7 @@
 // -----------------------------------------------------------------------
 // ⚙️ CONFIGURATION (EDIT HERE)
 // -----------------------------------------------------------------------
-const TMDB_API_KEY = "YOUR_TMDB_API_KEY_HERE"; // <-- PASTE YOUR TMDB API KEY HERE
+const TMDB_API_KEY = "032bb4acd80291322ea323660fde75bf"; // <-- PASTE YOUR TMDB API KEY HERE
 const BOT_USERNAME = "navvorabot";             // <-- YOUR TELEGRAM BOT USERNAME (WITHOUT @)
 // -----------------------------------------------------------------------
 

@@ -371,7 +371,11 @@ const BOT_USERNAME = "navvorabot";             // <-- YOUR TELEGRAM BOT USERNAME
   $('loadMore').addEventListener('click', loadMore);
   setupSearchInput($('topSearch'), 'top');
   setupSearchInput($('search'), 'bottom');
-
+// Example: Track when a user clicks on a movie
+  window.va('event', { 
+    name: 'movie_click', 
+    data: { title: movie.title, category: 'telugu' } 
+});
   // Initialize
   loadHome();
 })();

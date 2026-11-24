@@ -216,17 +216,50 @@ const BOT_USERNAME = "navvorabot";
   }
 
   async function loadFeatured() {
-    const categories = Object.keys(CATEGORIES);
-    const results = await Promise.all(categories.map(category => loadCategory(category)));
-    const unique = new Map();
-    results.flat().forEach(movie => unique.set(movie.id, movie));
-    heroItems = [...unique.values()]
-      .sort((a, b) => b.popularity - a.popularity)
-      .slice(0, 6);
-    if (heroItems.length) {
-      showHero(0);
-      restartHero();
+    // Keep the hero focused on Indian cinema only (never Hollywood/US titles).
+    // This query refreshes from TMDB whenever the page is opened.
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const recent = new Date();
+      recent.setMonth(recent.getMonth() - 18);
+      const fromDate = recent.toISOString().split("T")[0];
+      const pages = await Promise.all([1, 2, 3].map(page =>
+        fetchTmdb("/discover/movie", {
+          include_adult: "false",
+          include_video: "false",
+          with_origin_country: "IN",
+          "release_date.gte": fromDate,
+          "release_date.lte": today,
+          "vote_count.gte": "5",
+          sort_by: "primary_release_date.desc",
+          page
+        })
+      ));
+      const unique = new Map();
+      pages.flatMap(data => data.results || [])
+        .filter(row => row.id && row.poster_path && row.original_language !== "en")
+        .map(siteMovieItem)
+        .forEach(movie => unique.set(movie.id, movie));
+
+      heroItems = [...unique.values()]
+        .sort((a, b) =>
+          (b.release_date || "").localeCompare(a.release_date || "") ||
+          b.popularity - a.popularity
+        )
+        .slice(0, 6);
+
+      if (heroItems.length) {
+        showHero(0);
+        restartHero();
+      }
+    } catch (error) {
+      console.error("Navvora Indian featured movies failed:", error);
+      $("heroTitle").textContent = "Discover the latest Indian movies";
+      $("heroOverview").textContent = "Featured movies are temporarily unavailable. Please refresh to try again.";
     }
+
+    // Load all four catalogue sections independently of the Indian-only hero.
+    Object.keys(CATEGORIES).forEach(category => loadCategory(category));
   }
 
   async function loadMore() {

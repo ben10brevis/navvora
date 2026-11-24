@@ -1464,3 +1464,18 @@ header {
   .file-pulse,.file-orbit i,.edition-card,.edition-skeleton { animation:none; }
   .edition-card,.edition-facts a { transition:none; }
 }
+
+/* PRIME-INSPIRED EDITION PAGE: poster + cinematic backdrop, original Navvora colors */
+.prime-file-hero { min-height:340px; align-items:center; }
+.file-backdrop { position:absolute; inset:0; background-position:center 35%; background-size:cover; opacity:.28; filter:saturate(.9); }
+.prime-file-hero:before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#07101ff9 0%,#07101fdb 42%,#07101f88 75%,#07101f45 100%),linear-gradient(0deg,#07101f 0%,transparent 60%); z-index:0; }
+.file-poster-wrap { position:relative; z-index:2; flex:0 0 185px; width:185px; border-radius:18px; overflow:hidden; border:1px solid rgba(185,220,230,.28); box-shadow:0 24px 55px rgba(0,0,0,.55),0 0 25px rgba(89,228,213,.12); transform:perspective(800px) rotateY(-4deg); }
+.file-poster-wrap img { display:block; width:100%; aspect-ratio:2/3; object-fit:cover; }
+.prime-file-hero .file-hero-copy { flex:1; }
+.prime-file-hero .file-orbit { flex:0 0 130px; width:130px; height:130px; }
+@media(max-width:700px) {
+ .prime-file-hero { display:grid; grid-template-columns:100px 1fr; min-height:unset; gap:18px; }
+ .file-poster-wrap { width:100px; flex-basis:100px; border-radius:13px; }
+ .prime-file-hero .file-hero-copy { grid-column:1/-1; grid-row:2; }
+ .prime-file-hero .file-orbit { display:none; }
+}

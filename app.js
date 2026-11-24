@@ -44,6 +44,11 @@ const BOT_USERNAME = "navvorabot";
     return "https://t.me/" + BOT_USERNAME + "?start=" + encodeURIComponent(movie.bot_payload || "");
   }
 
+  function filePageLink(movie) {
+    const params = new URLSearchParams({ title: movie.title || "", bot: botLink(movie) });
+    return "files.html?" + params.toString();
+  }
+
   function siteMovieItem(row) {
     const title = row.title || row.original_title || "Untitled";
     const release = row.release_date || "";
@@ -70,7 +75,7 @@ const BOT_USERNAME = "navvorabot";
     const saved = isSaved(movie.id);
     return `
       <article class="movie-shell" data-movie-id="${movie.id}">
-        <a class="movie" href="${botLink(movie)}" target="_blank" rel="noopener noreferrer" title="Find ${esc(movie.title)} in Navvora">
+        <a class="movie" href="${filePageLink(movie)}" title="Explore ${esc(movie.title)} on Navvora">
           <div class="poster">
             ${img}
             <span class="rating">★ ${Number(movie.rating || 0).toFixed(1)}</span>
@@ -283,7 +288,7 @@ const BOT_USERNAME = "navvorabot";
     $("heroOverview").textContent = movie.overview || `${movie.year || ""} · Discover this movie on Navvora.`;
     const backdrop = movie.backdrop || movie.poster;
     $("heroBg").style.backgroundImage = backdrop ? `url("${backdrop.replace(/"/g, "%22")}")` : "";
-    $("heroOpen").href = botLink(movie);
+    $("heroOpen").href = filePageLink(movie);
     if (movie.poster) {
       $("heroPoster").src = movie.poster;
       $("heroPoster").alt = movie.title + " Poster";

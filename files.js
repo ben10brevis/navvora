@@ -3,6 +3,9 @@
   const params = new URLSearchParams(location.search);
   const title = (params.get("title") || "").trim().slice(0, 120);
   const fallback = params.get("bot") || "https://t.me/navvorabot";
+  const tmdbId = Number(params.get("id") || 0);
+  const posterParam = params.get("poster") || "";
+  const backdropParam = params.get("backdrop") || "";
   const $ = id => document.getElementById(id);
   const safeBotUrl = value => {
     try {
@@ -55,7 +58,11 @@
   };
   async function loadArtwork(query) {
     try {
-      const res = await fetch("https://api.themoviedb.org/3/search/movie?api_key=032bb4acd80291322ea323660fde75bf&query=" + encodeURIComponent(query));
+      if (posterParam) { $("filePoster").src = posterParam; $("filePoster").style.display = "block"; }
+      if (backdropParam) $("fileBackdrop").style.backgroundImage = 'url("' + backdropParam.replace(/["\\\\]/g, "") + '")';
+      if (posterParam || backdropParam) return;
+      const endpoint = tmdbId ? "movie/" + tmdbId : "search/movie?query=" + encodeURIComponent(query);
+      const res = await fetch("https://api.themoviedb.org/3/" + endpoint + "&api_key=032bb4acd80291322ea323660fde75bf".replace("movie/" + tmdbId + "&", "movie/" + tmdbId + "?"));
       if (!res.ok) return;
       const data = await res.json();
       const match = (data.results || []).find(x => x.poster_path) || (data.results || [])[0];

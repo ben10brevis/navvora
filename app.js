@@ -62,18 +62,130 @@ const BOT_USERNAME = "navvorabot";
   }
 
   function card(movie) {
+    movieCache.set(Number(movie.id), movie);
     const img = movie.poster
       ? `<img loading="lazy" src="${esc(movie.poster)}" alt="${esc(movie.title)} poster" onerror="this.outerHTML='<div class=&quot;fallback&quot;>${esc(movie.title)}</div>'">`
       : `<div class="fallback">${esc(movie.title)}</div>`;
+    const saved = isSaved(movie.id);
     return `
-      <a class="movie" href="${botLink(movie)}" target="_blank" rel="noopener noreferrer" title="Find ${esc(movie.title)} in Navvora">
-        <div class="poster">
-          ${img}
-          <span class="rating">★ ${Number(movie.rating || 0).toFixed(1)}</span>
-        </div>
-        <h3>${esc(movie.title)}</h3>
-        <p class="meta">${esc(movie.year || "Year N/A")} · ${esc((movie.language || "").toUpperCase())}</p>
-      </a>`;
+      <article class="movie-shell" data-movie-id="${movie.id}">
+        <a class="movie" href="${botLink(movie)}" target="_blank" rel="noopener noreferrer" title="Find ${esc(movie.title)} in Navvora">
+          <div class="poster">
+            ${img}
+            <span class="rating">★ ${Number(movie.rating || 0).toFixed(1)}</span>
+            <span class="poster-hint">VIEW DETAILS</span>
+          </div>
+          <h3>${esc(movie.title)}</h3>
+          <p class="meta">${esc(movie.year || "Year N/A")} · ${esc((movie.language || "").toUpperCase())}</p>
+        </a>
+        <button class="details-trigger" type="button" data-details-id="${movie.id}" aria-label="View details for ${esc(movie.title)}">ⓘ</button>
+        <button class="save-movie ${saved ? "saved" : ""}" type="button" data-save-id="${movie.id}" aria-label="${saved ? "Remove from" : "Add to"} watchlist">${saved ? "♥ SAVED" : "＋ WATCHLIST"}</button>
+      </article>`;
+  }
+
+  const WATCHLIST_KEY = "navvora_watchlist_v1";
+  const movieCache = new Map();
+  let activeModalMovie = null;
+  let modalReturnFocus = null;
+
+  function readWatchlist() {
+    try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function isSaved(id) { return readWatchlist().some(item => Number(item.id) === Number(id)); }
+  function saveMovie(movie) {
+    const list = readWatchlist();
+    const exists = list.some(item => Number(item.id) === Number(movie.id));
+    const next = exists ? list.filter(item => Number(item.id) !== Number(movie.id)) : [movie, ...list].slice(0, 100);
+    localStorage.setItem(WATCHLIST_KEY, JSON.stringify(next));
+    updateWatchlistUI();
+    document.querySelectorAll(`[data-save-id="${movie.id}"]`).forEach(button => {
+      button.classList.toggle("saved", !exists);
+      button.textContent = exists ? "＋ WATCHLIST" : "♥ SAVED";
+      button.setAttribute("aria-label", exists ? "Add to watchlist" : "Remove from watchlist");
+    });
+    if (activeModalMovie && Number(activeModalMovie.id) === Number(movie.id)) {
+      $("modalSave").textContent = exists ? "♡ Save to Watchlist" : "♥ Saved to Watchlist";
+      $("modalSave").classList.toggle("saved", !exists);
+    }
+  }
+  function updateWatchlistUI() {
+    const list = readWatchlist();
+    $("watchlistCount").textContent = list.length;
+    $("watchlistGrid").innerHTML = list.length
+      ? list.map(card).join("")
+      : '<div class="empty">Your watchlist is empty. Save movies you want to remember.</div>';
+  }
+  function findMovie(id) {
+    return movieCache.get(Number(id)) || [...Object.keys(CATEGORIES).flatMap(key => state[key].items), ...heroItems, ...readWatchlist()].find(item => Number(item.id) === Number(id));
+  }
+  async function openMovieDetails(movie, trigger) {
+    if (!movie) return;
+    activeModalMovie = movie;
+    modalReturnFocus = trigger || document.activeElement;
+    $("movieModal").classList.add("open");
+    $("movieModal").setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+    $("modalTitle").textContent = movie.title;
+    $("modalOverview").textContent = movie.overview || "No synopsis is available yet.";
+    $("modalMeta").textContent = [movie.year, movie.language?.toUpperCase(), "★ " + Number(movie.rating || 0).toFixed(1)].filter(Boolean).join("  ·  ");
+    $("modalArt").style.backgroundImage = movie.backdrop ? `url("${movie.backdrop}")` : movie.poster ? `url("${movie.poster}")` : "none";
+    $("modalFind").href = botLink(movie);
+    $("modalGenres").textContent = "Loading movie details…";
+    $("modalCast").textContent = "";
+    $("modalSave").textContent = isSaved(movie.id) ? "♥ Saved to Watchlist" : "♡ Save to Watchlist";
+    $("modalSave").classList.toggle("saved", isSaved(movie.id));
+    try {
+      const details = await fetchTmdb("/movie/" + encodeURIComponent(movie.id), { append_to_response: "credits" });
+      if (!activeModalMovie || Number(activeModalMovie.id) !== Number(movie.id)) return;
+      const genres = (details.genres || []).map(item => item.name).slice(0, 4);
+      $("modalGenres").innerHTML = genres.map(name => `<span>${esc(name)}</span>`).join("");
+      const cast = (details.credits?.cast || []).slice(0, 4).map(person => person.name);
+      $("modalCast").textContent = cast.length ? "CAST  ·  " + cast.join("  ·  ") : "";
+      if (details.overview) $("modalOverview").textContent = details.overview;
+    } catch (error) {
+      $("modalGenres").textContent = "More details are temporarily unavailable.";
+    }
+  }
+  function closeMovieDetails() {
+    $("movieModal").classList.remove("open");
+    $("movieModal").setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    activeModalMovie = null;
+    if (modalReturnFocus && typeof modalReturnFocus.focus === "function") modalReturnFocus.focus();
+  }
+  function setupMovieActions(root) {
+    root.addEventListener("click", event => {
+      const detailsButton = event.target.closest("[data-details-id]");
+      if (detailsButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const movie = findMovie(detailsButton.dataset.detailsId);
+        if (movie) openMovieDetails(movie, detailsButton);
+        return;
+      }
+      const saveButton = event.target.closest("[data-save-id]");
+      if (saveButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const movie = findMovie(saveButton.dataset.saveId);
+        if (movie) saveMovie(movie);
+        return;
+      }
+      const shell = event.target.closest(".movie-shell");
+      if (shell && !event.target.closest("a")) {
+        const movie = findMovie(shell.dataset.movieId);
+        if (movie) openMovieDetails(movie, event.target);
+      }
+    });
+    root.addEventListener("contextmenu", event => {
+      const shell = event.target.closest(".movie-shell");
+      if (shell) {
+        event.preventDefault();
+        const movie = findMovie(shell.dataset.movieId);
+        if (movie) openMovieDetails(movie, event.target);
+      }
+    });
   }
 
   async function fetchTmdb(endpoint, params = {}) {
@@ -332,7 +444,30 @@ const BOT_USERNAME = "navvorabot";
     const button = $("tab" + category[0].toUpperCase() + category.slice(1));
     button.addEventListener("click", () => switchCategory(category));
   });
-  $("loadMore").addEventListener("click", loadMore);
+  setupMovieActions($("latestGrid"));
+  setupMovieActions($("topSearchGrid"));
+  setupMovieActions($("searchGrid"));
+  setupMovieActions($("watchlistGrid"));
+  $("watchlistBtn").addEventListener("click", () => {
+    const section = $("watchlistSection");
+    section.hidden = !section.hidden;
+    updateWatchlistUI();
+    if (!section.hidden) section.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("closeWatchlist").addEventListener("click", () => { $("watchlistSection").hidden = true; });
+  $("surpriseBtn").addEventListener("click", () => {
+    const items = state[state.category].items;
+    if (!items.length) { $("latest").scrollIntoView({ behavior: "smooth" }); return; }
+    const choice = items[Math.floor(Math.random() * items.length)];
+    openMovieDetails(choice, $("surpriseBtn"));
+  });
+  $("modalClose").addEventListener("click", closeMovieDetails);
+  $("movieModal").addEventListener("click", event => { if (event.target === $("movieModal")) closeMovieDetails(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && $("movieModal").classList.contains("open")) closeMovieDetails(); });
+  $("modalSave").addEventListener("click", () => { if (activeModalMovie) saveMovie(activeModalMovie); });
+  updateWatchlistUI();
+
+    $("loadMore").addEventListener("click", loadMore);
   setupSearchInput($("topSearch"), "top");
   setupSearchInput($("search"), "bottom");
 

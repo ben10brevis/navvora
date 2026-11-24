@@ -68,7 +68,7 @@
       if (poster) { $("filePoster").src = poster; $("filePoster").style.display = "block"; }
       if (backdrop) $("fileBackdrop").style.backgroundImage = 'url("' + backdrop + '")';
       if (releaseYear) $("fileIntro").textContent = "Movie editions · " + releaseYear + " · Choose an edition to continue.";
-      if (poster || backdrop) return;
+      if (poster && backdrop) return;
       const url = new URL("https://api.themoviedb.org/3/" + (tmdbId ? "movie/" + tmdbId : "search/movie"));
       url.searchParams.set("api_key","032bb4acd80291322ea323660fde75bf");
       if (!tmdbId) url.searchParams.set("query",query);

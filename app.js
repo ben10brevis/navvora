@@ -62,6 +62,7 @@ const BOT_USERNAME = "navvorabot";
   }
 
   function card(movie) {
+    movieCache.set(Number(movie.id), movie);
     const img = movie.poster
       ? `<img loading="lazy" src="${esc(movie.poster)}" alt="${esc(movie.title)} poster" onerror="this.outerHTML='<div class=&quot;fallback&quot;>${esc(movie.title)}</div>'">`
       : `<div class="fallback">${esc(movie.title)}</div>`;
@@ -77,11 +78,13 @@ const BOT_USERNAME = "navvorabot";
           <h3>${esc(movie.title)}</h3>
           <p class="meta">${esc(movie.year || "Year N/A")} · ${esc((movie.language || "").toUpperCase())}</p>
         </a>
+        <button class="details-trigger" type="button" data-details-id="${movie.id}" aria-label="View details for ${esc(movie.title)}">ⓘ</button>
         <button class="save-movie ${saved ? "saved" : ""}" type="button" data-save-id="${movie.id}" aria-label="${saved ? "Remove from" : "Add to"} watchlist">${saved ? "♥ SAVED" : "＋ WATCHLIST"}</button>
       </article>`;
   }
 
   const WATCHLIST_KEY = "navvora_watchlist_v1";
+  const movieCache = new Map();
   let activeModalMovie = null;
   let modalReturnFocus = null;
 
@@ -114,8 +117,7 @@ const BOT_USERNAME = "navvorabot";
       : '<div class="empty">Your watchlist is empty. Save movies you want to remember.</div>';
   }
   function findMovie(id) {
-    const pools = [...Object.keys(CATEGORIES).flatMap(key => state[key].items), ...heroItems, ...readWatchlist()];
-    return pools.find(item => Number(item.id) === Number(id));
+    return movieCache.get(Number(id)) || [...Object.keys(CATEGORIES).flatMap(key => state[key].items), ...heroItems, ...readWatchlist()].find(item => Number(item.id) === Number(id));
   }
   async function openMovieDetails(movie, trigger) {
     if (!movie) return;
@@ -154,6 +156,14 @@ const BOT_USERNAME = "navvorabot";
   }
   function setupMovieActions(root) {
     root.addEventListener("click", event => {
+      const detailsButton = event.target.closest("[data-details-id]");
+      if (detailsButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const movie = findMovie(detailsButton.dataset.detailsId);
+        if (movie) openMovieDetails(movie, detailsButton);
+        return;
+      }
       const saveButton = event.target.closest("[data-save-id]");
       if (saveButton) {
         event.preventDefault();

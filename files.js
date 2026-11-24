@@ -4,6 +4,11 @@
   const title = (params.get("title") || "").trim().slice(0, 120);
   const fallback = params.get("bot") || "https://t.me/navvorabot";
   const $ = id => document.getElementById(id);
+  const poster = params.get("poster") || "";
+  const backdrop = params.get("backdrop") || "";
+  if (poster) { $("filePoster").src = poster; $("filePoster").alt = title + " poster"; $("filePoster").style.display = "block"; }
+  else $("filePoster").style.display = "none";
+  if (backdrop) $("fileBackdrop").style.backgroundImage = "url('" + backdrop.replace(/[\\'()]/g, "") + "')";
   const safeBotUrl = value => {
     try {
       const url = new URL(value || fallback);

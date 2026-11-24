@@ -12,7 +12,7 @@
     if (!res.ok) throw new Error("TMDB request failed (" + res.status + ")");
     return res.json();
   }
-  const normalize = x => ({id:Number(x.id),title:x.title || x.name || "Untitled",year:String(x.release_date || x.first_air_date || "").slice(0,4),language:String(x.original_language || "").toLowerCase(),rating:Number(x.vote_average || 0),poster:x.poster_path ? "https://image.tmdb.org/t/p/w500" + x.poster_path : "",backdrop:x.backdrop_path ? "https://image.tmdb.org/t/p/w1280" + x.backdrop_path : ""});
+  const normalize = x => ({id:Number(x.id),title:x.title || x.name || "Untitled",year:String(x.release_date || x.first_air_date || "").slice(0,4),language:String(x.original_language || "").toLowerCase(),rating:Number(x.vote_average || 0),poster:x.poster || (x.poster_path ? "https://image.tmdb.org/t/p/w500" + x.poster_path : ""),backdrop:x.backdrop || (x.backdrop_path ? "https://image.tmdb.org/t/p/w1280" + x.backdrop_path : "")});
   const href = m => "files.html?" + new URLSearchParams({title:m.title || ""});
   function card(m) {
     m = normalize(m);
@@ -49,8 +49,9 @@
     },true);
   }
   async function recommendations() {
-    const recent = getRecent(); const root = $("recommendedGrid");
-    if (!recent.length || !root) return;
+    const recent = getRecent(); const root = $("recommendedGrid"); const section = $("recommendedSection");
+    if (!recent.length || !root) { if (section) section.hidden = true; return; }
+    if (section) section.hidden = false;
     try {
       const data = await api("/movie/" + Number(recent[0].id) + "/recommendations");
       render("recommendedGrid",data.results.filter(x => x.poster_path),"No recommendations are available yet.");
@@ -76,14 +77,17 @@
     new MutationObserver(() => {
       if (!modal.classList.contains("open") || !active || Number(extras.dataset.id) === active) return;
       extras.dataset.id = String(active); extras.innerHTML = '<p class="extras-note">Loading cast, trailer and similar movies…</p>';
-      api("/movie/" + active,{append_to_response:"credits,videos,recommendations"}).then(d => {
+      api("/movie/" + active,{append_to_response:"credits,videos,recommendations,watch/providers"}).then(d => {
         const director = (d.credits?.crew || []).find(p => p.job === "Director");
         const cast = (d.credits?.cast || []).slice(0,6);
         const trailer = (d.videos?.results || []).find(v => v.site === "YouTube" && v.type === "Trailer" && v.key);
         const similar = (d.recommendations?.results || []).filter(x => x.poster_path).slice(0,4);
+        const providers = d["watch/providers"]?.results?.IN;
+        const providerNames = [...(providers?.flatrate || []),...(providers?.rent || []),...(providers?.buy || [])].filter((p,i,a) => a.findIndex(x => x.provider_id === p.provider_id) === i).map(p => p.provider_name);
         extras.innerHTML = (director ? '<p class="extras-note"><b>DIRECTOR</b> · ' + esc(director.name) + '</p>' : '') +
           (cast.length ? '<h3 class="extras-title">Cast</h3><div class="cast-rail">' + cast.map(p => '<div class="cast-person">' + (p.profile_path ? '<img loading="lazy" src="https://image.tmdb.org/t/p/w185' + esc(p.profile_path) + '" alt="' + esc(p.name) + '">' : '<span class="cast-placeholder">NV</span>') + '<b>' + esc(p.name) + '</b><small>' + esc(p.character || "Cast") + '</small></div>').join("") + '</div>' : '') +
           (trailer ? '<p class="trailer-row"><a class="cta secondary" href="https://www.youtube.com/watch?v=' + encodeURIComponent(trailer.key) + '" target="_blank" rel="noopener noreferrer">▶ WATCH TRAILER</a></p>' : '<p class="extras-note">No official trailer is listed.</p>') +
+          (providerNames.length ? '<p class="provider-line"><b>WHERE TO WATCH IN INDIA</b><br>' + providerNames.map(esc).join(" · ") + '</p>' : '<p class="extras-note">Streaming provider data is not listed for India.</p>') +
           (similar.length ? '<h3 class="extras-title">You May Also Like</h3><div class="grid discovery-grid modal-recommendations">' + similar.map(card).join("") + '</div>' : '');
       }).catch(() => { extras.innerHTML = '<p class="extras-note">Extra movie details are temporarily unavailable.</p>'; });
     }).observe(modal,{attributes:true,attributeFilter:["class"]});

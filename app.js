@@ -5,6 +5,7 @@
  */
 const TMDB_API_KEY = "032bb4acd80291322ea323660fde75bf";
 const BOT_USERNAME = "navvorabot";
+  const FILE_API_BASE = "https://filebot-2wxx.onrender.com";
 
 (() => {
   const $ = id => document.getElementById(id);
@@ -119,6 +120,57 @@ const BOT_USERNAME = "navvorabot";
   function findMovie(id) {
     return movieCache.get(Number(id)) || [...Object.keys(CATEGORIES).flatMap(key => state[key].items), ...heroItems, ...readWatchlist()].find(item => Number(item.id) === Number(id));
   }
+  function renderMovieFiles(items) {
+    const root = $("modalFiles");
+    if (!root) return;
+    if (!items.length) {
+      root.innerHTML = '<div class="files-empty">No matching Telegram files are indexed for this title yet.</div>';
+      return;
+    }
+    root.innerHTML = items.map(file => {
+      const url = String(file.bot_url || "");
+      const safeUrl = /^https:\/\/t\.me\/[A-Za-z0-9_]+\?start=[A-Za-z0-9_-]+$/.test(url) ? url : "";
+      const tags = [
+        file.quality || "",
+        ...(Array.isArray(file.languages) ? file.languages.slice(0, 2).map(x => String(x).toUpperCase()) : []),
+        file.season ? "S" + String(file.season).padStart(2, "0") + (file.episode ? "E" + String(file.episode).padStart(2, "0") : "") : ""
+      ].filter(Boolean);
+      return `
+        <article class="tg-file-card">
+          <div class="tg-file-main">
+            <h3>${esc(file.title || file.index_title || "Telegram file")}</h3>
+            <p class="tg-file-index">${esc(file.index_title || "")}</p>
+            <div class="tg-file-tags">${tags.map(tag => `<span>${esc(tag)}</span>`).join("")}</div>
+          </div>
+          <div class="tg-file-bottom">
+            <span class="tg-file-size">${esc(file.size || "Size unavailable")}</span>
+            ${safeUrl ? `<a class="tg-file-button" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">➤ &nbsp; Get on Telegram</a>` : '<span class="tg-file-unavailable">Telegram link unavailable</span>'}
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  async function loadMovieFiles(movie) {
+    const root = $("modalFiles");
+    if (!root) return;
+    root.innerHTML = '<div class="files-loading"><span class="spinner"></span> Finding files in Telegram…</div>';
+    try {
+      const url = FILE_API_BASE + "/api/files?q=" + encodeURIComponent(movie.title || "");
+      const response = await fetch(url, { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.detail || "Telegram file lookup failed.");
+      if (!activeModalMovie || Number(activeModalMovie.id) !== Number(movie.id)) return;
+      renderMovieFiles(Array.isArray(data.items) ? data.items : []);
+      const count = Array.isArray(data.items) ? data.items.length : 0;
+      $("modalFilesCount").textContent = count ? count + " AVAILABLE" : "0 AVAILABLE";
+    } catch (error) {
+      if (!activeModalMovie || Number(activeModalMovie.id) !== Number(movie.id)) return;
+      root.innerHTML = '<div class="files-empty">Telegram file catalogue is temporarily unavailable. You can still search this title in the bot.</div>';
+      $("modalFilesCount").textContent = "UNAVAILABLE";
+      console.error("Navvora Telegram file lookup failed:", error);
+    }
+  }
+
   async function openMovieDetails(movie, trigger) {
     if (!movie) return;
     activeModalMovie = movie;
@@ -135,6 +187,8 @@ const BOT_USERNAME = "navvorabot";
     $("modalCast").textContent = "";
     $("modalSave").textContent = isSaved(movie.id) ? "♥ Saved to Watchlist" : "♡ Save to Watchlist";
     $("modalSave").classList.toggle("saved", isSaved(movie.id));
+    $("modalFilesCount").textContent = "LOADING";
+    loadMovieFiles(movie);
     try {
       const details = await fetchTmdb("/movie/" + encodeURIComponent(movie.id), { append_to_response: "credits" });
       if (!activeModalMovie || Number(activeModalMovie.id) !== Number(movie.id)) return;

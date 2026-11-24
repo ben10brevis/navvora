@@ -45,7 +45,7 @@ const BOT_USERNAME = "navvorabot";
   }
 
   function filePageLink(movie) {
-    const params = new URLSearchParams({ title: movie.title || "", bot: botLink(movie) });
+    const params = new URLSearchParams({ title: movie.title || "", bot: botLink(movie), id: String(movie.id || ""), poster: movie.poster || "", backdrop: movie.backdrop || "", year: movie.year || "" });
     return "files.html?" + params.toString();
   }
 

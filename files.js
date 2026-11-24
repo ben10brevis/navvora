@@ -3,6 +3,10 @@
   const params = new URLSearchParams(location.search);
   const title = (params.get("title") || "").trim().slice(0, 120);
   const fallback = params.get("bot") || "https://t.me/navvorabot";
+  const tmdbId = Number(params.get("id") || 0);
+  const posterParam = params.get("poster") || "";
+  const backdropParam = params.get("backdrop") || "";
+  const releaseYear = params.get("year") || "";
   const $ = id => document.getElementById(id);
   const safeBotUrl = value => {
     try {
@@ -55,17 +59,31 @@
   };
   async function loadArtwork(query) {
     try {
-      const res = await fetch("https://api.themoviedb.org/3/search/movie?api_key=032bb4acd80291322ea323660fde75bf&query=" + encodeURIComponent(query));
+      const validImage = value => {
+        try { const u = new URL(value); return u.protocol === "https:" && u.hostname === "image.tmdb.org" ? u.href : ""; }
+        catch { return ""; }
+      };
+      const poster = validImage(posterParam);
+      const backdrop = validImage(backdropParam);
+      if (poster) { $("filePoster").src = poster; $("filePoster").style.display = "block"; }
+      if (backdrop) $("fileBackdrop").style.backgroundImage = 'url("' + backdrop + '")';
+      if (releaseYear) $("fileIntro").textContent = "Movie editions · " + releaseYear + " · Choose an edition to continue.";
+      if (poster && backdrop) return;
+      const url = new URL("https://api.themoviedb.org/3/" + (tmdbId ? "movie/" + tmdbId : "search/movie"));
+      url.searchParams.set("api_key","032bb4acd80291322ea323660fde75bf");
+      if (!tmdbId) url.searchParams.set("query",query);
+      const res = await fetch(url.toString());
       if (!res.ok) return;
       const data = await res.json();
-      const match = (data.results || []).find(x => x.poster_path) || (data.results || [])[0];
+      const match = tmdbId ? data : (data.results || []).find(x => x.poster_path) || (data.results || [])[0];
       if (!match) return;
       if (match.poster_path) {
         $("filePoster").src = "https://image.tmdb.org/t/p/w500" + match.poster_path;
         $("filePoster").style.display = "block";
       }
       if (match.backdrop_path) $("fileBackdrop").style.backgroundImage = 'url("https://image.tmdb.org/t/p/w1280' + match.backdrop_path + '")';
-      if (match.release_date) $("fileIntro").textContent = "Movie editions · " + match.release_date.slice(0,4) + " · Choose an edition to continue to Telegram.";
+      const year = String(match.release_date || "").slice(0,4);
+      if (year) $("fileIntro").textContent = "Movie editions · " + year + " · Choose an edition to continue.";
     } catch (_) {}
   }
   const openBot = () => { location.replace(safeBotUrl(fallback)); };

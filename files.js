@@ -53,11 +53,27 @@
         </article>`;
     }).join("");
   };
+  async function loadArtwork(query) {
+    try {
+      const res = await fetch("https://api.themoviedb.org/3/search/movie?api_key=032bb4acd80291322ea323660fde75bf&query=" + encodeURIComponent(query));
+      if (!res.ok) return;
+      const data = await res.json();
+      const match = (data.results || []).find(x => x.poster_path) || (data.results || [])[0];
+      if (!match) return;
+      if (match.poster_path) {
+        $("filePoster").src = "https://image.tmdb.org/t/p/w500" + match.poster_path;
+        $("filePoster").style.display = "block";
+      }
+      if (match.backdrop_path) $("fileBackdrop").style.backgroundImage = 'url("https://image.tmdb.org/t/p/w1280' + match.backdrop_path + '")';
+      if (match.release_date) $("fileIntro").textContent = "Movie editions · " + match.release_date.slice(0,4) + " · Choose an edition to continue to Telegram.";
+    } catch (_) {}
+  }
   const openBot = () => { location.replace(safeBotUrl(fallback)); };
   async function init() {
     if (!title) { $("movieTitle").textContent = "Movie not specified"; $("fileIntro").textContent = "Go back and choose a title from the catalogue."; status("NO TITLE SELECTED","error"); $("editionCount").textContent = "0"; $("editionList").innerHTML = ""; return; }
     $("movieTitle").textContent = title;
     document.title = title + " · Navvora";
+    loadArtwork(title);
     try {
       const response = await fetch(API + "?q=" + encodeURIComponent(title), { cache: "no-store" });
       if (!response.ok) throw new Error("Catalogue temporarily unavailable");

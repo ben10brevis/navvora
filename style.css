@@ -1232,3 +1232,46 @@ header {
 @media (prefers-reduced-motion:reduce) {
   *,*:before,*:after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
 }
+
+/* Telegram file catalogue inside the movie details dialog */
+.modal-files-section { margin:24px 0 22px; }
+.modal-files-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
+.modal-files-heading h3 { margin:0; font:800 21px Outfit,sans-serif; letter-spacing:-.5px; }
+.modal-files-heading span { color:#aaa6b4; font-size:10px; font-weight:800; letter-spacing:1px; white-space:nowrap; }
+.modal-files-list { display:grid; gap:12px; }
+.tg-file-card {
+  min-width:0; padding:17px; border-radius:19px;
+  border:1px solid rgba(255,255,255,.11);
+  background:linear-gradient(145deg,rgba(29,28,37,.96),rgba(19,18,26,.94));
+  box-shadow:inset 0 1px rgba(255,255,255,.045),0 12px 28px rgba(0,0,0,.2);
+  transition:border-color .22s,transform .22s,box-shadow .22s;
+}
+.tg-file-card:hover { border-color:rgba(248,187,61,.38); transform:translateY(-2px); box-shadow:0 16px 35px rgba(0,0,0,.32),0 0 24px rgba(248,187,61,.055); }
+.tg-file-main h3 { margin:0; color:#f4f1e9; font:600 15px/1.55 'Plus Jakarta Sans',sans-serif; overflow-wrap:anywhere; }
+.tg-file-index { margin:5px 0 0; color:#8f8b99; font-size:11px; overflow-wrap:anywhere; }
+.tg-file-tags { display:flex; flex-wrap:wrap; gap:7px; margin-top:11px; }
+.tg-file-tags span { padding:6px 10px; border-radius:9px; color:#b9b5c1; background:#24222c; font-size:10px; font-weight:800; }
+.tg-file-tags span:first-child { color:#f8bd48; background:rgba(248,187,61,.14); }
+.tg-file-bottom { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; }
+.tg-file-size { flex:0 0 auto; color:#aaa6b4; font-size:13px; font-weight:600; }
+.tg-file-button {
+  min-height:48px; flex:1; display:inline-flex; align-items:center; justify-content:center;
+  padding:11px 16px; border-radius:999px; text-align:center; text-decoration:none;
+  color:#17120a; background:linear-gradient(135deg,#ffda7d,#f4b333);
+  border:1px solid rgba(255,220,140,.65); font-size:13px; font-weight:800;
+  box-shadow:0 8px 24px rgba(248,187,61,.15),inset 0 1px rgba(255,255,255,.5);
+  transition:transform .2s,box-shadow .2s;
+}
+.tg-file-button:hover { color:#17120a; transform:translateY(-1px); box-shadow:0 12px 28px rgba(248,187,61,.24); }
+.files-loading,.files-empty { padding:18px; border-radius:15px; border:1px dashed rgba(248,187,61,.25); background:rgba(255,255,255,.025); color:#aaa6b4; font-size:13px; line-height:1.7; }
+.files-loading { display:flex; align-items:center; gap:10px; }
+.tg-file-unavailable { color:#aaa6b4; font-size:12px; }
+@media(max-width:600px) {
+  .modal-files-section { margin:21px 0; }
+  .modal-files-heading h3 { font-size:19px; }
+  .tg-file-card { padding:14px; border-radius:16px; }
+  .tg-file-main h3 { font-size:13px; }
+  .tg-file-bottom { align-items:stretch; flex-direction:column; gap:10px; }
+  .tg-file-size { font-size:12px; }
+  .tg-file-button { min-height:47px; width:100%; font-size:12px; }
+}

@@ -216,27 +216,28 @@ const BOT_USERNAME = "navvorabot";
   }
 
   async function loadFeatured() {
-    // Keep the hero focused on Indian cinema only (never Hollywood/US titles).
-    // This query refreshes from TMDB whenever the page is opened.
+    // Start the default catalogue immediately; do not wait for the hero request.
+    loadCategory(state.category);
+
+    // One fresh TMDB request is enough to populate the Indian-cinema hero.
     try {
       const today = new Date().toISOString().split("T")[0];
       const recent = new Date();
       recent.setMonth(recent.getMonth() - 18);
       const fromDate = recent.toISOString().split("T")[0];
-      const pages = await Promise.all([1, 2, 3].map(page =>
-        fetchTmdb("/discover/movie", {
-          include_adult: "false",
-          include_video: "false",
-          with_origin_country: "IN",
-          "release_date.gte": fromDate,
-          "release_date.lte": today,
-          "vote_count.gte": "5",
-          sort_by: "primary_release_date.desc",
-          page
-        })
-      ));
+      const data = await fetchTmdb("/discover/movie", {
+        include_adult: "false",
+        include_video: "false",
+        with_origin_country: "IN",
+        "release_date.gte": fromDate,
+        "release_date.lte": today,
+        "vote_count.gte": "5",
+        sort_by: "primary_release_date.desc",
+        page: 1
+      });
+
       const unique = new Map();
-      pages.flatMap(data => data.results || [])
+      (data.results || [])
         .filter(row => row.id && row.poster_path && row.original_language !== "en")
         .map(siteMovieItem)
         .forEach(movie => unique.set(movie.id, movie));
@@ -257,9 +258,6 @@ const BOT_USERNAME = "navvorabot";
       $("heroTitle").textContent = "Discover the latest Indian movies";
       $("heroOverview").textContent = "Featured movies are temporarily unavailable. Please refresh to try again.";
     }
-
-    // Load all four catalogue sections independently of the Indian-only hero.
-    Object.keys(CATEGORIES).forEach(category => loadCategory(category));
   }
 
   async function loadMore() {

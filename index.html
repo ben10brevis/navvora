@@ -4,45 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#08080d">
-  <title>Navvora Telugu — Movies</title>
-  
+  <meta name="description" content="Discover Telugu, Tamil, Hindi and Hollywood movies on Navvora.">
+  <title>Navvora — Movies</title>
   <link rel="preconnect" href="https://image.tmdb.org">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- Top Navigation Bar -->
   <header>
-    <div class="brand">NAVVORA <span>TELUGU</span></div>
+    <div class="brand">NAVVORA <span>CINEMA</span></div>
     <div class="nav-right">
-      <span class="nav-tag">TELUGU CINEMA · ONE CLIP AT A TIME</span>
+      <span class="nav-tag">FOUR LANGUAGES · ONE MOVIE DESTINATION</span>
       <a class="join" href="https://t.me/navvoratelugu" target="_blank" rel="noopener">JOIN TELEGRAM ↗</a>
     </div>
   </header>
 
   <main class="shell">
-    <!-- Top Search Bar -->
     <section class="top-search-wrap" id="topSearchWrap">
       <div class="search-box">
         <span class="search-icon">⌕</span>
-        <input id="topSearch" type="search" placeholder="Search any movie (Telugu, Hollywood, etc.)..." autocomplete="off">
+        <input id="topSearch" type="search" placeholder="Search Telugu, Tamil, Hindi or Hollywood movies..." autocomplete="off">
         <span class="search-state" id="topSearchState"></span>
       </div>
       <div class="search-results" id="topSearchSection">
-        <div class="section-head">
-          <div>
-            <h2>Search Results</h2>
-            <p>Tap a poster to open the movie in Telegram.</p>
-          </div>
-        </div>
+        <div class="section-head"><div><h2>Search Results</h2><p>Tap a poster to find the movie on Navvora.</p></div></div>
         <div class="grid" id="topSearchGrid"></div>
       </div>
     </section>
 
-    <!-- Featured Hero Section (Accurate Poster Showcase & 6 Top Posters) -->
     <section class="hero">
       <div class="hero-backdrop" id="heroBg"></div>
       <div class="hero-inner">
@@ -50,87 +40,69 @@
           <div class="eyebrow">FEATURED ON NAVVORA</div>
           <h1 id="heroTitle">Your next movie night starts here.</h1>
           <div class="hero-meta-row" id="heroMeta"></div>
-          <p id="heroOverview">Discover the latest Telugu cinema, updated daily.</p>
+          <p id="heroOverview">Discover movies across Telugu, Tamil, Hindi and Hollywood.</p>
           <div class="hero-actions">
             <a class="cta primary" id="heroOpen" href="https://t.me/navvorabot" target="_blank" rel="noopener">▶ &nbsp; Find in Navvora</a>
             <a class="cta secondary" href="#latest">Explore movies ↓</a>
           </div>
-          <!-- 6 Accurate Featured Poster Thumbnails -->
           <div class="hero-thumbs" id="heroThumbs"></div>
         </div>
         <div class="hero-poster-showcase">
           <div class="hero-poster-card">
             <img id="heroPoster" src="" alt="Featured Movie Poster">
             <span class="badge" id="heroRating">★ 8.0</span>
-            <span class="dub-badge" id="heroDub" style="display:none">TELUGU DUB</span>
+            <span class="dub-badge" id="heroDub" style="display:none">DUBBED</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Movie Catalogue with Telugu and Hollywood Switcher -->
     <section class="section" id="latest">
       <div class="section-head">
         <div>
           <h2 id="sectionTitle">Latest Telugu Movies</h2>
           <p id="updated">Fresh picks, refreshed daily</p>
         </div>
-        <div class="category-tabs">
-          <button class="cat-btn active" id="tabTelugu" type="button">TELUGU</button>
-          <button class="cat-btn" id="tabHollywood" type="button">HOLLYWOOD</button>
+        <div class="category-tabs" role="group" aria-label="Movie language">
+          <button class="cat-btn active" id="tabTelugu" data-category="telugu" type="button" aria-pressed="true">TELUGU</button>
+          <button class="cat-btn" id="tabTamil" data-category="tamil" type="button" aria-pressed="false">TAMIL</button>
+          <button class="cat-btn" id="tabHindi" data-category="hindi" type="button" aria-pressed="false">HINDI</button>
+          <button class="cat-btn" id="tabHollywood" data-category="hollywood" type="button" aria-pressed="false">HOLLYWOOD</button>
         </div>
-        <span class="count" id="movieCount">20 MOVIES</span>
+        <span class="count" id="movieCount">0 MOVIES</span>
       </div>
-      <div class="grid" id="latestGrid">
-        <div class="empty">Loading latest movies…</div>
-      </div>
+      <div class="grid" id="latestGrid"><div class="empty">Loading latest movies…</div></div>
       <div class="load-wrap">
-        <button class="load-btn" id="loadMore">
+        <button class="load-btn" id="loadMore" type="button">
           <span class="arrow">＋</span> LOAD 7 MORE MOVIES
         </button>
       </div>
     </section>
 
-    <!-- Bottom Search Section -->
     <section class="search-section" id="searchArea">
-      <div class="section-head">
-        <div>
-          <h2>Find Your Movie</h2>
-          <p>Search by movie title and discover it on Navvora.</p>
-        </div>
-      </div>
+      <div class="section-head"><div><h2>Find Your Movie</h2><p>Search by movie title and discover it on Navvora.</p></div></div>
       <div class="search-box">
         <span class="search-icon">⌕</span>
         <input id="search" type="search" placeholder="Search any movie..." autocomplete="off">
         <span class="search-state" id="searchState"></span>
       </div>
       <div class="search-results" id="searchSection">
-        <div class="section-head">
-          <div>
-            <h2>Search Results</h2>
-            <p>Tap a poster to open the movie in Telegram.</p>
-          </div>
-        </div>
+        <div class="section-head"><div><h2>Search Results</h2><p>Tap a poster to find the movie on Navvora.</p></div></div>
         <div class="grid" id="searchGrid"></div>
       </div>
     </section>
 
-    <footer class="foot">
-      MOVIE METADATA & POSTERS BY  · <b>NAVVORA TELUGU</b>
-    </footer>
+    <footer class="foot">MOVIE METADATA & POSTERS BY · <b>NAVVORA CINEMA</b></footer>
   </main>
 
   <script src="app.js"></script>
-  
-<!-- Vercel Speed Insights -->
-<script>
-  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
-  
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
+  <script>
+    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -13,7 +13,8 @@
     return res.json();
   }
   const normalize = x => ({id:Number(x.id),title:x.title || x.name || "Untitled",year:String(x.release_date || x.first_air_date || "").slice(0,4),language:String(x.original_language || "").toLowerCase(),rating:Number(x.vote_average || 0),poster:x.poster || (x.poster_path ? "https://image.tmdb.org/t/p/w500" + x.poster_path : ""),backdrop:x.backdrop || (x.backdrop_path ? "https://image.tmdb.org/t/p/w1280" + x.backdrop_path : "")});
-  const href = m => "files.html?" + new URLSearchParams({title:m.title || ""});
+  const botUrl = title => { const words = String(title || "").toLowerCase().match(/[a-z0-9]+/g) || []; return "https://t.me/navvorabot?start=" + encodeURIComponent("q_" + words.slice(0,8).join("_")); };
+  const href = m => "files.html?" + new URLSearchParams({title:m.title || "",bot:botUrl(m.title),id:String(m.id || ""),poster:m.poster || "",backdrop:m.backdrop || "",year:m.year || ""});
   function card(m) {
     m = normalize(m);
     return '<article class="movie-shell discovery-card" data-movie-id="' + m.id + '"><a class="movie" href="' + esc(href(m)) + '"><div class="poster">' +

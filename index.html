@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="discovery.css">
 </head>
 <body>
   <header>
@@ -94,6 +95,23 @@
       </div>
     </section>
 
+
+    <section class="discovery-section" id="recentSection" hidden><div class="section-head"><div><h2>Continue Exploring</h2><p>Recently opened titles on this device.</p></div><button class="text-action" id="clearRecent" type="button">CLEAR HISTORY</button></div><div class="grid discovery-grid" id="recentGrid"></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Trending This Week</h2><p>Popular titles from TMDB.</p></div></div><div class="grid discovery-grid" id="trendingGrid"><div class="empty">Loading trending titles…</div></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Mass & Action Picks</h2><p>Popular Indian action titles.</p></div></div><div class="grid discovery-grid" id="actionGrid"><div class="empty">Loading collection…</div></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Family Movie Night</h2><p>Family-friendly picks.</p></div></div><div class="grid discovery-grid" id="familyGrid"><div class="empty">Loading collection…</div></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Critically Loved Indian Cinema</h2><p>Highly rated titles with enough TMDB votes.</p></div></div><div class="grid discovery-grid" id="topRatedIndiaGrid"><div class="empty">Loading collection…</div></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Because You Explored</h2><p>Recommendations based on recently opened titles.</p></div></div><div class="grid discovery-grid" id="recommendedGrid"><div class="empty">Explore a few movies to build recommendations.</div></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Upcoming in Cinema</h2><p>Upcoming release listings from TMDB.</p></div></div><div class="grid discovery-grid" id="upcomingGrid"><div class="empty">Loading upcoming releases…</div></div></section>
+    <section class="discovery-section"><div class="section-head"><div><h2>Advanced Movie Finder</h2><p>Filter by language, genre, year and popularity.</p></div></div><form class="filter-panel" id="movieFilterForm">
+      <label>Language<select id="filterLanguage"><option value="">All languages</option><option value="te">Telugu</option><option value="ta">Tamil</option><option value="hi">Hindi</option><option value="en">English</option><option value="ml">Malayalam</option><option value="kn">Kannada</option></select></label>
+      <label>Genre<select id="filterGenre"><option value="">All genres</option><option value="28">Action</option><option value="12">Adventure</option><option value="35">Comedy</option><option value="18">Drama</option><option value="27">Horror</option><option value="10749">Romance</option><option value="53">Thriller</option><option value="10751">Family</option></select></label>
+      <label>Year<input id="filterYear" type="number" min="1900" max="2100" placeholder="Any year"></label>
+      <label>Sort<select id="filterSort"><option value="popularity.desc">Most popular</option><option value="vote_average.desc">Highest rated</option><option value="primary_release_date.desc">Newest first</option></select></label>
+      <button class="cta primary filter-submit" type="submit">FIND MOVIES</button>
+    </form><div class="grid discovery-grid" id="filterResults"></div></section>
+    <section class="discovery-section"><div class="radar-panel"><div><span class="discovery-kicker">NAVVORA CINEMA RADAR</span><strong>Fresh cinema picks, all in one place.</strong><p>Daily trending titles and upcoming release listings from TMDB — not breaking news.</p></div><a class="cta secondary" href="#latest">EXPLORE CATALOGUE ↓</a></div></section>
+
     <section class="search-section" id="searchArea">
       <div class="section-head"><div><h2>Find Your Movie</h2><p>Search by movie title and discover it on Navvora.</p></div></div>
       <div class="search-box">
@@ -122,6 +140,7 @@
         <p id="modalOverview"></p>
         <div class="modal-extra" id="modalGenres"></div>
         <p class="modal-cast" id="modalCast"></p>
+        <div id="modalExtras" class="modal-extras"></div>
         <section class="modal-files-section" aria-labelledby="modalFilesHeading">
           <div class="modal-files-heading">
             <h3 id="modalFilesHeading">Files on Telegram</h3>
@@ -137,6 +156,7 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="discovery.js"></script>
   <script>
     window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
   </script>

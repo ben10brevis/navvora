@@ -57,6 +57,19 @@
       </div>
     </section>
 
+
+    <section class="discovery-bar" aria-label="Quick discovery">
+      <div class="discovery-copy"><span class="discovery-kicker">YOUR NEXT FAVORITE</span><strong>Find something worth watching.</strong></div>
+      <div class="discovery-actions">
+        <button class="quick-action" id="surpriseBtn" type="button">✦ <span>Surprise me</span></button>
+        <button class="quick-action" id="watchlistBtn" type="button">♡ <span>My watchlist</span> <b id="watchlistCount">0</b></button>
+      </div>
+    </section>
+    <section class="watchlist-section" id="watchlistSection" hidden>
+      <div class="section-head"><div><h2>My Watchlist</h2><p>Your saved movies, on this device.</p></div><button class="text-action" id="closeWatchlist" type="button">CLOSE ✕</button></div>
+      <div class="grid" id="watchlistGrid"></div>
+    </section>
+
     <section class="section" id="latest">
       <div class="section-head">
         <div>
@@ -96,6 +109,23 @@
 
     <footer class="foot">MOVIE METADATA & POSTERS BY · <b>NAVVORA CINEMA</b></footer>
   </main>
+
+
+  <div class="modal-backdrop" id="movieModal" aria-hidden="true">
+    <section class="movie-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="modalClose" type="button" aria-label="Close movie details">×</button>
+      <div class="modal-art" id="modalArt"></div>
+      <div class="modal-content">
+        <div class="modal-kicker">NAVVORA MOVIE GUIDE</div>
+        <h2 id="modalTitle">Movie title</h2>
+        <div class="modal-meta" id="modalMeta"></div>
+        <p id="modalOverview"></p>
+        <div class="modal-extra" id="modalGenres"></div>
+        <p class="modal-cast" id="modalCast"></p>
+        <div class="modal-actions"><a class="cta primary" id="modalFind" href="#" target="_blank" rel="noopener noreferrer">▶ Find in Navvora</a><button class="cta secondary" id="modalSave" type="button">♡ Save to Watchlist</button></div>
+      </div>
+    </section>
+  </div>
 
   <script src="app.js"></script>
   <script>

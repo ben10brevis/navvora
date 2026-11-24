@@ -61,7 +61,7 @@
     e.preventDefault(); const root = $("filterResults");
     root.innerHTML = '<div class="empty">Searching the catalogue…</div>';
     const year = $("filterYear").value.trim();
-    if (year && (!/^\\d{4}$/.test(year) || Number(year) < 1900 || Number(year) > 2100)) { root.innerHTML = '<div class="empty">Enter a valid four-digit year.</div>'; return; }
+    if (year && (!/^\d{4}$/.test(year) || Number(year) < 1900 || Number(year) > 2100)) { root.innerHTML = '<div class="empty">Enter a valid four-digit year.</div>'; return; }
     const p = {include_adult:"false",sort_by:$("filterSort").value,page:1};
     if ($("filterLanguage").value) p.with_original_language = $("filterLanguage").value;
     if ($("filterGenre").value) p.with_genres = $("filterGenre").value;

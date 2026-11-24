@@ -133,7 +133,8 @@ const BOT_USERNAME = "navvorabot";
       const tags = [
         file.quality || "",
         ...(Array.isArray(file.languages) ? file.languages.slice(0, 2).map(x => String(x).toUpperCase()) : []),
-        file.season ? "S" + String(file.season).padStart(2, "0") + (file.episode ? "E" + String(file.episode).padStart(2, "0") : "") : ""
+        file.season ? "S" + String(file.season).padStart(2, "0") + (file.episode ? "E" + String(file.episode).padStart(2, "0") : "") : "",
+        Number(file.file_count || 0) > 1 ? Number(file.file_count) + " files" : ""
       ].filter(Boolean);
       return `
         <article class="tg-file-card">

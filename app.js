@@ -1,7 +1,7 @@
 /**
  * NAVVORA CINEMA — multilingual TMDB catalogue
  * Categories use each movie's original language:
- * Telugu (te), Tamil (ta), Hindi (hi), Hollywood/English (en).
+ * Telugu (te), Tamil (ta), Hindi (hi), Hollywood/English (en), Malayalam (ml), Kannada (kn).
  */
 const TMDB_API_KEY = "032bb4acd80291322ea323660fde75bf";
 const BOT_USERNAME = "navvorabot";
@@ -12,7 +12,9 @@ const BOT_USERNAME = "navvorabot";
     telugu: { label: "Telugu", language: "te", title: "Latest Telugu Movies", country: "IN" },
     tamil: { label: "Tamil", language: "ta", title: "Latest Tamil Movies", country: "IN" },
     hindi: { label: "Hindi", language: "hi", title: "Latest Hindi Movies", country: "IN" },
-    hollywood: { label: "Hollywood", language: "en", title: "Latest Hollywood Movies" }
+    hollywood: { label: "Hollywood", language: "en", title: "Latest Hollywood Movies" },
+    malayalam: { label: "Malayalam", language: "ml", title: "Latest Malayalam Movies", country: "IN" },
+    kannada: { label: "Kannada", language: "kn", title: "Latest Kannada Movies", country: "IN" }
   };
 
   let heroItems = [];

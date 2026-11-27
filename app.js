@@ -101,11 +101,29 @@ const BOT_USERNAME = "navvorabot";
     catch { return []; }
   }
   function isSaved(id) { return readWatchlist().some(item => Number(item.id) === Number(id)); }
+  let toastTimer = null;
+  function showToast(message) {
+    let toast = $("navvoraToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "navvoraToast";
+      toast.className = "navvora-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+  }
+
   function saveMovie(movie) {
     const list = readWatchlist();
     const exists = list.some(item => Number(item.id) === Number(movie.id));
     const next = exists ? list.filter(item => Number(item.id) !== Number(movie.id)) : [movie, ...list].slice(0, 100);
     localStorage.setItem(WATCHLIST_KEY, JSON.stringify(next));
+    showToast(exists ? "Removed from your watchlist" : "Added to your watchlist");
     updateWatchlistUI();
     document.querySelectorAll(`[data-save-id="${movie.id}"]`).forEach(button => {
       button.classList.toggle("saved", !exists);
@@ -604,7 +622,45 @@ const BOT_USERNAME = "navvorabot";
   $("modalSave").addEventListener("click", () => { if (activeModalMovie) saveMovie(activeModalMovie); });
   updateWatchlistUI();
 
-    $("loadMore").addEventListener("click", loadMore);
+  // Lightweight navigation helpers: reading progress, back-to-top and "/" search shortcut.
+  const progress = document.createElement("div");
+  progress.className = "navvora-progress";
+  progress.setAttribute("aria-hidden", "true");
+  document.body.appendChild(progress);
+  const topButton = document.createElement("button");
+  topButton.className = "navvora-top";
+  topButton.type = "button";
+  topButton.textContent = "↑";
+  topButton.setAttribute("aria-label", "Back to top");
+  document.body.appendChild(topButton);
+  topButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+  let scrollTicking = false;
+  window.addEventListener("scroll", () => {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    window.requestAnimationFrame(() => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const percent = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
+      progress.style.width = percent + "%";
+      topButton.classList.toggle("visible", window.scrollY > 520);
+      const header = document.querySelector("header");
+      if (header) header.classList.toggle("is-scrolled", window.scrollY > 12);
+      scrollTicking = false;
+    });
+  }, { passive: true });
+
+  document.addEventListener("keydown", event => {
+    const target = event.target;
+    const typing = target && (target.matches("input, textarea, select") || target.isContentEditable);
+    if (event.key === "/" && !typing && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      $("topSearch").focus();
+      $("topSearch").scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+
+  $("loadMore").addEventListener("click", loadMore);
   setupSearchInput($("topSearch"), "top");
   setupSearchInput($("search"), "bottom");
 

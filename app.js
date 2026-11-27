@@ -21,7 +21,9 @@ const BOT_USERNAME = "navvorabot";
   let heroItems = [];
   let heroIndex = 0;
   let heroTimer = null;
-  let searchTimer = null;
+  const searchTimers = { top: null, bottom: null };
+  const searchCache = new Map();
+  const searchControllers = new Map();
   let lastQuery = "";
   let loadingMore = false;
   const state = { category: "telugu" };
@@ -276,8 +278,7 @@ const BOT_USERNAME = "navvorabot";
       "vote_count.gte": category === "telugu" || category === "tamil" || category === "hindi" ? 1 : 10,
       page
     };
-    if (config.country) params.with_origin_country = config.country;
-    return params;
+    if (config.country) params.with_origin_country = config.country;    return params;
   }
 
   function showHero(index) {
@@ -461,33 +462,117 @@ const BOT_USERNAME = "navvorabot";
     }
   }
 
+  function searchResultButton(movie) {
+    movieCache.set(Number(movie.id), movie);
+    const poster = movie.poster
+      ? `<img loading="lazy" src="${esc(movie.poster)}" alt="" onerror="this.style.display='none'">`
+      : '<span class="search-result-fallback">NV</span>';
+    return `
+      <button class="search-result" type="button" data-search-select="${Number(movie.id)}">
+        <span class="search-result-poster">${poster}</span>
+        <span class="search-result-copy">
+          <strong>${esc(movie.title)}</strong>
+          <span>${esc(movie.year || "Year unavailable")} · ${esc((movie.language || "—").toUpperCase())}</span>
+          <small>★ ${Number(movie.rating || 0).toFixed(1)} · TMDB match</small>
+        </span>
+        <span class="search-result-open">VIEW →</span>
+      </button>`;
+  }
+
+  function rankSearchResults(items, query) {
+    const needle = query.toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+    const score = movie => {
+      const title = String(movie.title || "").toLocaleLowerCase();
+      const original = String(movie.original_title || "").toLocaleLowerCase();
+      const normalizedTitle = title.replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+      const normalizedOriginal = original.replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+      if (normalizedTitle === needle || normalizedOriginal === needle) return 100000;
+      if (normalizedTitle.startsWith(needle) || normalizedOriginal.startsWith(needle)) return 50000;
+      if (normalizedTitle.includes(needle) || normalizedOriginal.includes(needle)) return 25000;
+      return Number(movie.popularity || 0);
+    };
+    return items.sort((a, b) => score(b) - score(a) || b.popularity - a.popularity);
+  }
+
   async function search(query, source) {
     const isTop = source === "top";
     const stateEl = isTop ? $("topSearchState") : $("searchState");
     const sectionEl = isTop ? $("topSearchSection") : $("searchSection");
     const gridEl = isTop ? $("topSearchGrid") : $("searchGrid");
-    if (query.length < 2) {
+    const normalized = query.trim().replace(/\\s+/g, " ");
+    if (normalized.length < 2) {
       sectionEl.classList.remove("show");
       stateEl.textContent = "";
+      gridEl.innerHTML = "";
       return;
     }
-    stateEl.textContent = "…";
-    try {
-      const data = await fetchTmdb("/search/movie", { query, include_adult: "false", page: 1 });
-      const results = (data.results || [])
-        .filter(row => row.id && row.poster_path)
-        .map(siteMovieItem);
-      if (query !== (isTop ? $("topSearch").value.trim() : $("search").value.trim())) return;
-      gridEl.innerHTML = results.length
-        ? results.map(card).join("")
-        : '<div class="empty">No matching movie found. Try another title.</div>';
+
+    const cacheKey = normalized.toLocaleLowerCase();
+    const cached = searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.time < 5 * 60 * 1000) {
+      gridEl.innerHTML = cached.items.length
+        ? cached.items.map(searchResultButton).join("")
+        : '<div class="empty">No close matches yet. Try the original title or a shorter spelling.</div>';
       sectionEl.classList.add("show");
-      stateEl.textContent = results.length ? results.length + " FOUND" : "";
-    } catch (error) {
-      gridEl.innerHTML = `<div class="empty">${esc(error.message || "Search unavailable")}</div>`;
-      sectionEl.classList.add("show");
-      stateEl.textContent = "";
+      stateEl.textContent = cached.items.length ? cached.items.length + " MATCHES" : "NO MATCH";
+      return;
     }
+
+    const previous = searchControllers.get(source);
+    if (previous) previous.abort();
+    const controller = new AbortController();
+    searchControllers.set(source, controller);
+    stateEl.textContent = "SEARCHING TMDB…";
+    sectionEl.classList.add("show");
+    gridEl.innerHTML = '<div class="search-loading"><span class="spinner"></span> Finding the closest movie titles…</div>';
+
+    try {
+      const data = await fetchTmdb("/search/movie", {
+        query: normalized,
+        include_adult: "false",
+        page: 1
+      });
+      if (controller.signal.aborted) return;
+      const currentQuery = (isTop ? $("topSearch").value : $("search").value).trim().replace(/\\s+/g, " ");
+      if (normalized !== currentQuery) return;
+
+      const results = rankSearchResults((data.results || [])
+        .filter(row => row.id)
+        .map(siteMovieItem), normalized).slice(0, 12);
+      searchCache.set(cacheKey, { time: Date.now(), items: results });
+      gridEl.innerHTML = results.length
+        ? results.map(searchResultButton).join("")
+        : '<div class="empty">No close matches yet. Try the original title, an alternate spelling or fewer words.</div>';
+      stateEl.textContent = results.length ? results.length + " MATCHES · SELECT THE RIGHT TITLE" : "NO MATCH";
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      gridEl.innerHTML = '<div class="empty">Search is temporarily unavailable. Please try again.</div>';
+      stateEl.textContent = "SEARCH ERROR";
+      console.error("Navvora TMDB search failed:", error);
+    }
+  }
+
+  function setupSearchInput(input, source) {
+    input.addEventListener("input", () => {
+      const query = input.value.trim();
+      if (source === "top") $("search").value = query;
+      else $("topSearch").value = query;
+      clearTimeout(searchTimers[source]);
+      if (query.length < 2) {
+        search(query, source);
+        return;
+      }
+      searchTimers[source] = setTimeout(() => search(query, source), 260);
+    });
+  }
+
+  function setupSearchSelection(root) {
+    root.addEventListener("click", event => {
+      const button = event.target.closest("[data-search-select]");
+      if (!button) return;
+      const movie = findMovie(button.dataset.searchSelect);
+      if (movie) openMovieDetails(movie, button);
+    });
   }
 
   function setupSearchInput(input, source) {
@@ -507,6 +592,8 @@ const BOT_USERNAME = "navvorabot";
   setupMovieActions($("latestGrid"));
   setupMovieActions($("topSearchGrid"));
   setupMovieActions($("searchGrid"));
+  setupSearchSelection($("topSearchGrid"));
+  setupSearchSelection($("searchGrid"));
   setupMovieActions($("watchlistGrid"));
   $("watchlistBtn").addEventListener("click", () => {
     const section = $("watchlistSection");

@@ -57,7 +57,6 @@ const BOT_USERNAME = "navvorabot";
     return {
       id: Number(row.id || 0),
       title,
-      original_title: row.original_title || title,
       year: release.length >= 4 ? release.substring(0, 4) : "",
       release_date: release,
       language: (row.original_language || "").toLowerCase(),
@@ -277,7 +276,8 @@ const BOT_USERNAME = "navvorabot";
       sort_by: "primary_release_date.desc",
       "release_date.lte": today,
       "vote_count.gte": category === "telugu" || category === "tamil" || category === "hindi" ? 1 : 10,
-      page    };
+      page
+    };
     if (config.country) params.with_origin_country = config.country;    return params;
   }
 
@@ -558,3 +558,57 @@ const BOT_USERNAME = "navvorabot";
       if (source === "top") $("search").value = query;
       else $("topSearch").value = query;
       clearTimeout(searchTimers[source]);
+      if (query.length < 2) {
+        search(query, source);
+        return;
+      }
+      searchTimers[source] = setTimeout(() => search(query, source), 260);
+    });
+  }
+
+  function setupSearchSelection(root) {
+    root.addEventListener("click", event => {
+      const button = event.target.closest("[data-search-select]");
+      if (!button) return;
+      const movie = findMovie(button.dataset.searchSelect);
+      if (movie) openMovieDetails(movie, button);
+    });
+  }
+
+  Object.keys(CATEGORIES).forEach(category => {
+    const button = $("tab" + category[0].toUpperCase() + category.slice(1));
+    button.addEventListener("click", () => switchCategory(category));
+  });
+  setupMovieActions($("latestGrid"));
+  setupMovieActions($("topSearchGrid"));
+  setupMovieActions($("searchGrid"));
+  setupSearchSelection($("topSearchGrid"));
+  setupSearchSelection($("searchGrid"));
+  setupMovieActions($("watchlistGrid"));
+  $("watchlistBtn").addEventListener("click", () => {
+    const section = $("watchlistSection");
+    section.hidden = !section.hidden;
+    updateWatchlistUI();
+    if (!section.hidden) section.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("closeWatchlist").addEventListener("click", () => { $("watchlistSection").hidden = true; });
+  $("surpriseBtn").addEventListener("click", () => {
+    const items = state[state.category].items;
+    if (!items.length) { $("latest").scrollIntoView({ behavior: "smooth" }); return; }
+    const choice = items[Math.floor(Math.random() * items.length)];
+    openMovieDetails(choice, $("surpriseBtn"));
+  });
+  $("modalClose").addEventListener("click", closeMovieDetails);
+  $("movieModal").addEventListener("click", event => { if (event.target === $("movieModal")) closeMovieDetails(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && $("movieModal").classList.contains("open")) closeMovieDetails(); });
+  $("modalSave").addEventListener("click", () => { if (activeModalMovie) saveMovie(activeModalMovie); });
+  updateWatchlistUI();
+
+    $("loadMore").addEventListener("click", loadMore);
+  setupSearchInput($("topSearch"), "top");
+  setupSearchInput($("search"), "bottom");
+
+  updateTabs();
+  renderGrid();
+  loadFeatured();
+})();
